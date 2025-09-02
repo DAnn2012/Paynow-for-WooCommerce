@@ -1179,7 +1179,7 @@ class WC_Gateway_Paynow extends WC_Payment_Gateway
 						$data = array(
 							'complete' => true,
 							'status' => $msg["status"],
-							'url' => $order->get_checkout_payment_url()
+							'url' => $order->get_checkout_payment_url(false)
 						);
 					}
 				}
