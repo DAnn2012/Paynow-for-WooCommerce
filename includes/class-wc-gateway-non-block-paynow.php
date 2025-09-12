@@ -448,15 +448,22 @@ class WC_Gateway_Paynow extends WC_Payment_Gateway
 			exit;
 		} else {
 			$payment_info = get_post_meta($order_id, '_wc_paynow_payment_meta', true);
+			$paynow_payment_method = $order->get_meta('_paynow_payment_method') == "" ? 'paynow' : $order->get_meta('_paynow_payment_method');
 
-			if ($payment_info != '') {
-				$method = $payment_info['method'];
-				// Payment has already been initiated, no need to process again
-				$this->paynow_express_checkout($order, $payment_info, $method, '');
-				exit;
+			// Only do these checks if order is still pending payment
+			if ($order->has_status('pending') && !empty($payment_info)) {
+				$method = isset($payment_info['method']) ? $payment_info['method'] : $paynow_payment_method;
+				if ($method === 'paynow' && !empty($payment_info['BrowserUrl'])) {
+					// If method is paynow, just redirect to BrowserUrl
+					wp_redirect($payment_info['BrowserUrl']);
+					exit;
+				} else {
+					// Payment has already been initiated, no need to process again
+					$this->paynow_express_checkout($order, $payment_info, $method, '');
+					exit;
+				}
 			}
 
-			$paynow_payment_method =  $order->get_meta('_paynow_payment_method') == "" ? 'paynow' : $order->get_meta('_paynow_payment_method');
 
 			$api_request_url =  WC()->api_request_url($this->callback);
 			$listener_url = add_query_arg('order_id', $order_id, $api_request_url);
